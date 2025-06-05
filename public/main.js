@@ -1,8 +1,8 @@
 // Firebase Configuration - Replace with your actual config
 const firebaseConfig = {
-   /**
-    * Add your firebase firestore credentials here
-    */
+ /**
+  * Your keys
+  */
 };
 
 // Initialize Firebase
