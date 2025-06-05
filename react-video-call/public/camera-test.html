@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera/Microphone Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-section.success {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+        .test-section.error {
+            border-color: #f44336;
+            background: #fff8f8;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: #000;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #2196F3;
+        }
+        .error-msg {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+        .success-msg {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+            color: #2e7d32;
+        }
+        .device-list {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .device-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success {
+            background: #4CAF50;
+            color: white;
+        }
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+        .status.warning {
+            background: #FF9800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Camera/Microphone Test</h1>
+        
+        <div class="info">
+            <strong>Purpose:</strong> This page tests if your browser can access camera and microphone.
+            Use this to diagnose issues before using the video call application.
+        </div>
+
+        <!-- Browser Compatibility -->
+        <div class="test-section" id="compatibility-section">
+            <h3>🌐 Browser Compatibility</h3>
+            <div id="compatibility-results"></div>
+        </div>
+
+        <!-- Device Detection -->
+        <div class="test-section" id="devices-section">
+            <h3>📱 Device Detection</h3>
+            <button onclick="detectDevices()">Detect Devices</button>
+            <div id="devices-results"></div>
+        </div>
+
+        <!-- Camera Test -->
+        <div class="test-section" id="camera-section">
+            <h3>📹 Camera Test</h3>
+            <button onclick="testCamera()">Test Camera</button>
+            <button onclick="stopCamera()">Stop Camera</button>
+            <div id="camera-results"></div>
+            <video id="camera-video" autoplay muted playsinline style="display: none;"></video>
+        </div>
+
+        <!-- Microphone Test -->
+        <div class="test-section" id="microphone-section">
+            <h3>🎤 Microphone Test</h3>
+            <button onclick="testMicrophone()">Test Microphone</button>
+            <button onclick="stopMicrophone()">Stop Microphone</button>
+            <div id="microphone-results"></div>
+            <div id="audio-level" style="display: none;">
+                <div style="background: #ddd; height: 20px; border-radius: 10px; margin: 10px 0;">
+                    <div id="audio-bar" style="background: #4CAF50; height: 100%; border-radius: 10px; width: 0%; transition: width 0.1s;"></div>
+                </div>
+                <p>Speak into your microphone - you should see the green bar move.</p>
+            </div>
+        </div>
+
+        <!-- Combined Test -->
+        <div class="test-section" id="combined-section">
+            <h3>🎬 Combined Test (Camera + Microphone)</h3>
+            <button onclick="testBoth()">Test Both</button>
+            <button onclick="stopAll()">Stop All</button>
+            <div id="combined-results"></div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="test-section">
+            <h3>🔧 Troubleshooting</h3>
+            <div class="info">
+                <strong>If tests fail:</strong>
+                <ol>
+                    <li>Click the camera/lock icon in your browser's address bar</li>
+                    <li>Set Camera and Microphone to "Allow"</li>
+                    <li>Refresh this page and try again</li>
+                    <li>Make sure you're using HTTPS or localhost</li>
+                    <li>Close other apps using camera/microphone (Zoom, Teams, etc.)</li>
+                    <li>Try a different browser (Chrome recommended)</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStream = null;
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let animationId = null;
+
+        // Check browser compatibility
+        function checkCompatibility() {
+            const results = document.getElementById('compatibility-results');
+            const section = document.getElementById('compatibility-section');
+            let html = '';
+            let allGood = true;
+
+            // Check getUserMedia support
+            const hasGetUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            html += `<div>getUserMedia Support: <span class="status ${hasGetUserMedia ? 'success' : 'error'}">${hasGetUserMedia ? 'YES' : 'NO'}</span></div>`;
+            if (!hasGetUserMedia) allGood = false;
+
+            // Check secure context
+            const isSecure = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            html += `<div>Secure Context: <span class="status ${isSecure ? 'success' : 'error'}">${isSecure ? 'YES' : 'NO'}</span></div>`;
+            if (!isSecure) allGood = false;
+
+            // Check WebRTC support
+            const hasWebRTC = !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
+            html += `<div>WebRTC Support: <span class="status ${hasWebRTC ? 'success' : 'error'}">${hasWebRTC ? 'YES' : 'NO'}</span></div>`;
+            if (!hasWebRTC) allGood = false;
+
+            html += `<div>Current URL: ${window.location.href}</div>`;
+            html += `<div>User Agent: ${navigator.userAgent}</div>`;
+
+            results.innerHTML = html;
+            section.className = `test-section ${allGood ? 'success' : 'error'}`;
+
+            if (!allGood) {
+                results.innerHTML += '<div class="error-msg">❌ Browser compatibility issues detected. Please use Chrome, Firefox, Safari, or Edge with HTTPS/localhost.</div>';
+            } else {
+                results.innerHTML += '<div class="success-msg">✅ Browser is compatible!</div>';
+            }
+        }
+
+        // Detect available devices
+        async function detectDevices() {
+            const results = document.getElementById('devices-results');
+            const section = document.getElementById('devices-section');
+            
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                
+                const videoInputs = devices.filter(device => device.kind === 'videoinput');
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+
+                let html = '<div class="device-list">';
+                html += `<h4>📹 Video Devices (${videoInputs.length})</h4>`;
+                if (videoInputs.length === 0) {
+                    html += '<div class="device-item">❌ No video devices found</div>';
+                } else {
+                    videoInputs.forEach((device, index) => {
+                        html += `<div class="device-item">📹 ${device.label || `Camera ${index + 1}`}</div>`;
+                    });
+                }
+
+                html += `<h4>🎤 Audio Input Devices (${audioInputs.length})</h4>`;
+                if (audioInputs.length === 0) {
+                    html += '<div class="device-item">❌ No audio input devices found</div>';
+                } else {
+                    audioInputs.forEach((device, index) => {
+                        html += `<div class="device-item">🎤 ${device.label || `Microphone ${index + 1}`}</div>`;
+                    });
+                }
+
+                html += `<h4>🔊 Audio Output Devices (${audioOutputs.length})</h4>`;
+                if (audioOutputs.length === 0) {
+                    html += '<div class="device-item">❌ No audio output devices found</div>';
+                } else {
+                    audioOutputs.forEach((device, index) => {
+                        html += `<div class="device-item">🔊 ${device.label || `Speaker ${index + 1}`}</div>`;
+                    });
+                }
+                html += '</div>';
+
+                const hasDevices = videoInputs.length > 0 || audioInputs.length > 0;
+                section.className = `test-section ${hasDevices ? 'success' : 'error'}`;
+                
+                if (hasDevices) {
+                    html += '<div class="success-msg">✅ Devices detected successfully!</div>';
+                } else {
+                    html += '<div class="error-msg">❌ No camera or microphone devices found. Please connect devices and refresh.</div>';
+                }
+
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<div class="error-msg">❌ Error detecting devices: ${error.message}</div>`;
+                section.className = 'test-section error';
+            }
+        }
+
+        // Test camera
+        async function testCamera() {
+            const results = document.getElementById('camera-results');
+            const section = document.getElementById('camera-section');
+            const video = document.getElementById('camera-video');
+            
+            try {
+                results.innerHTML = '<div>🔄 Testing camera access...</div>';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                currentStream = stream;
+                
+                video.srcObject = stream;
+                video.style.display = 'block';
+                
+                const videoTrack = stream.getVideoTracks()[0];
+                const settings = videoTrack.getSettings();
+                
+                let html = '<div class="success-msg">✅ Camera access successful!</div>';
+                html += '<div class="device-list">';
+                html += `<div><strong>Resolution:</strong> ${settings.width}x${settings.height}</div>`;
+                html += `<div><strong>Frame Rate:</strong> ${settings.frameRate} fps</div>`;
+                html += `<div><strong>Device:</strong> ${videoTrack.label}</div>`;
+                html += '</div>';
+                
+                results.innerHTML = html;
+                section.className = 'test-section success';
+            } catch (error) {
+                results.innerHTML = `<div class="error-msg">❌ Camera test failed: ${error.message}</div>`;
+                section.className = 'test-section error';
+                video.style.display = 'none';
+                
+                // Add specific error guidance
+                if (error.name === 'NotAllowedError') {
+                    results.innerHTML += '<div class="error-msg">🔒 Permission denied. Click the camera icon in your address bar and allow camera access.</div>';
+                } else if (error.name === 'NotFoundError') {
+                    results.innerHTML += '<div class="error-msg">📹 No camera found. Please connect a camera and try again.</div>';
+                } else if (error.name === 'NotReadableError') {
+                    results.innerHTML += '<div class="error-msg">📹 Camera is in use by another application. Close other apps and try again.</div>';
+                }
+            }
+        }
+
+        // Test microphone
+        async function testMicrophone() {
+            const results = document.getElementById('microphone-results');
+            const section = document.getElementById('microphone-section');
+            const audioLevel = document.getElementById('audio-level');
+            
+            try {
+                results.innerHTML = '<div>🔄 Testing microphone access...</div>';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                currentStream = stream;
+                
+                const audioTrack = stream.getAudioTracks()[0];
+                
+                // Set up audio analysis
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                function updateAudioLevel() {
+                    analyser.getByteFrequencyData(dataArray);
+                    const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+                    const percentage = (average / 255) * 100;
+                    document.getElementById('audio-bar').style.width = percentage + '%';
+                    animationId = requestAnimationFrame(updateAudioLevel);
+                }
+                updateAudioLevel();
+                
+                let html = '<div class="success-msg">✅ Microphone access successful!</div>';
+                html += '<div class="device-list">';
+                html += `<div><strong>Device:</strong> ${audioTrack.label}</div>`;
+                html += '</div>';
+                
+                results.innerHTML = html;
+                section.className = 'test-section success';
+                audioLevel.style.display = 'block';
+            } catch (error) {
+                results.innerHTML = `<div class="error-msg">❌ Microphone test failed: ${error.message}</div>`;
+                section.className = 'test-section error';
+                
+                // Add specific error guidance
+                if (error.name === 'NotAllowedError') {
+                    results.innerHTML += '<div class="error-msg">🔒 Permission denied. Click the microphone icon in your address bar and allow microphone access.</div>';
+                } else if (error.name === 'NotFoundError') {
+                    results.innerHTML += '<div class="error-msg">🎤 No microphone found. Please connect a microphone and try again.</div>';
+                } else if (error.name === 'NotReadableError') {
+                    results.innerHTML += '<div class="error-msg">🎤 Microphone is in use by another application. Close other apps and try again.</div>';
+                }
+            }
+        }
+
+        // Test both camera and microphone
+        async function testBoth() {
+            const results = document.getElementById('combined-results');
+            const section = document.getElementById('combined-section');
+            const video = document.getElementById('camera-video');
+            
+            try {
+                results.innerHTML = '<div>🔄 Testing camera and microphone access...</div>';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                currentStream = stream;
+                
+                video.srcObject = stream;
+                video.style.display = 'block';
+                
+                const videoTrack = stream.getVideoTracks()[0];
+                const audioTrack = stream.getAudioTracks()[0];
+                const videoSettings = videoTrack.getSettings();
+                
+                let html = '<div class="success-msg">✅ Both camera and microphone access successful!</div>';
+                html += '<div class="device-list">';
+                html += `<div><strong>Video:</strong> ${videoSettings.width}x${videoSettings.height} @ ${videoSettings.frameRate}fps</div>`;
+                html += `<div><strong>Camera:</strong> ${videoTrack.label}</div>`;
+                html += `<div><strong>Microphone:</strong> ${audioTrack.label}</div>`;
+                html += '</div>';
+                
+                results.innerHTML = html;
+                section.className = 'test-section success';
+            } catch (error) {
+                results.innerHTML = `<div class="error-msg">❌ Combined test failed: ${error.message}</div>`;
+                section.className = 'test-section error';
+                video.style.display = 'none';
+            }
+        }
+
+        // Stop camera
+        function stopCamera() {
+            const video = document.getElementById('camera-video');
+            video.style.display = 'none';
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+        }
+
+        // Stop microphone
+        function stopMicrophone() {
+            const audioLevel = document.getElementById('audio-level');
+            audioLevel.style.display = 'none';
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+        }
+
+        // Stop all
+        function stopAll() {
+            stopCamera();
+            stopMicrophone();
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            checkCompatibility();
+            detectDevices();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopAll();
+        });
+    </script>
+</body>
+</html>
