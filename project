@@ -1,0 +1,770 @@
+# WebRTC Firebase Video Chat Application
+
+A complete video chat application built with WebRTC and Firebase Firestore for signaling.
+
+## Prerequisites & Installation Requirements
+
+### Required Software
+1. **Node.js (LTS version recommended)**
+   ```bash
+   # Download from https://nodejs.org/
+   # Verify installation
+   node --version
+   npm --version
+   ```
+
+2. **Firebase CLI**
+   ```bash
+   # Install globally
+   npm install -g firebase-tools
+   
+   # Verify installation
+   firebase --version
+   
+   # Login to Firebase
+   firebase login
+   ```
+
+3. **Git**
+   ```bash
+   # Verify installation
+   git --version
+   ```
+
+## Step 1: Firebase Project Setup
+
+### Create Firebase Project
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Click "Add project"
+3. Name your project (e.g., "FirebaseRTC")
+4. Remember your Project ID
+5. Click "Create project"
+
+### Enable Cloud Firestore
+1. In Firebase console, go to "Database" in the Develop section
+2. Click "Create database" in Cloud Firestore
+3. Select "Start in test mode"
+4. Click "Enable"
+
+## Step 2: Project Setup
+
+### Clone and Initialize
+```bash
+# Clone the starter project
+git clone https://github.com/webrtc/FirebaseRTC
+cd FirebaseRTC
+
+# Associate with your Firebase project
+firebase use --add
+# Select your Project ID and give alias 'default'
+```
+
+### Project Structure
+```
+FirebaseRTC/
+├── public/
+│   ├── index.html
+│   ├── app.js
+│   ├── style.css
+│   └── main.js
+├── firebase.json
+└── .firebaserc
+```
+
+## Step 3: Complete Implementation Files
+
+### 1. public/index.html
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FirebaseRTC</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="videos">
+        <video id="localVideo" muted autoplay playsinline></video>
+        <video id="remoteVideo" autoplay playsinline></video>
+    </div>
+
+    <div id="buttons">
+        <button id="startButton">Start</button>
+        <button id="createBtn" disabled>Create Room</button>
+        <button id="joinBtn" disabled>Join Room</button>
+        <button id="hangupBtn" disabled>Hangup</button>
+    </div>
+
+    <div>
+        <span id="currentRoom"></span>
+    </div>
+
+    <div id="roomDialog" style="display: none;">
+        <label>Room ID:</label>
+        <input id="roomId" type="text">
+        <button id="confirmJoinBtn">Join</button>
+        <button id="cancelJoinBtn">Cancel</button>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script src="main.js"></script>
+</body>
+</html>
+```
+
+### 2. public/style.css
+```css
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+#videos {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+video {
+    width: 320px;
+    height: 240px;
+    background-color: #000;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+}
+
+#localVideo {
+    border-color: #4CAF50;
+}
+
+#remoteVideo {
+    border-color: #2196F3;
+}
+
+#buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    background-color: #2196F3;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+button:hover:not(:disabled) {
+    background-color: #1976D2;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+#createBtn {
+    background-color: #4CAF50;
+}
+
+#createBtn:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+#hangupBtn {
+    background-color: #f44336;
+}
+
+#hangupBtn:hover:not(:disabled) {
+    background-color: #da190b;
+}
+
+#currentRoom {
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #e3f2fd;
+    border-radius: 6px;
+    border: 1px solid #2196F3;
+}
+
+#roomDialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+}
+
+#roomDialog label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+#roomDialog input {
+    width: 200px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+#roomDialog button {
+    margin-right: 10px;
+}
+
+@media (max-width: 768px) {
+    #videos {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    video {
+        width: 280px;
+        height: 210px;
+    }
+    
+    #buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    button {
+        width: 200px;
+    }
+}
+```
+
+### 3. public/main.js (Firebase Configuration)
+```javascript
+// Replace with your Firebase config
+const firebaseConfig = {
+    apiKey: "your-api-key",
+    authDomain: "your-project-id.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project-id.appspot.com",
+    messagingSenderId: "your-sender-id",
+    appId: "your-app-id"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// WebRTC configuration
+const configuration = {
+    iceServers: [
+        {
+            urls: [
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302'
+            ]
+        }
+    ],
+    iceCandidatePoolSize: 10
+};
+
+let peerConnection = null;
+let localStream = null;
+let remoteStream = null;
+let roomDialog = null;
+let roomId = null;
+
+// Initialize the app
+function init() {
+    document.querySelector('#startButton').addEventListener('click', openUserMedia);
+    document.querySelector('#createBtn').addEventListener('click', createRoom);
+    document.querySelector('#joinBtn').addEventListener('click', () => {
+        document.querySelector('#roomDialog').style.display = 'block';
+    });
+    document.querySelector('#confirmJoinBtn').addEventListener('click', joinRoom);
+    document.querySelector('#cancelJoinBtn').addEventListener('click', () => {
+        document.querySelector('#roomDialog').style.display = 'none';
+    });
+    document.querySelector('#hangupBtn').addEventListener('click', hangUp);
+}
+
+// Open user media (camera and microphone)
+async function openUserMedia() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+        });
+        
+        document.querySelector('#localVideo').srcObject = stream;
+        localStream = stream;
+        remoteStream = new MediaStream();
+        document.querySelector('#remoteVideo').srcObject = remoteStream;
+
+        console.log('Stream:', stream);
+        document.querySelector('#startButton').disabled = true;
+        document.querySelector('#createBtn').disabled = false;
+        document.querySelector('#joinBtn').disabled = false;
+        document.querySelector('#hangupBtn').disabled = false;
+    } catch (error) {
+        console.error('Error accessing media devices:', error);
+        alert('Error accessing camera/microphone. Please ensure permissions are granted.');
+    }
+}
+
+// Create a new room
+async function createRoom() {
+    document.querySelector('#createBtn').disabled = true;
+    document.querySelector('#joinBtn').disabled = true;
+    
+    // Create peer connection
+    peerConnection = new RTCPeerConnection(configuration);
+    
+    registerPeerConnectionListeners();
+    
+    // Add local stream tracks to peer connection
+    localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+    });
+
+    // Code for collecting ICE candidates
+    const callerCandidatesCollection = db.collection('rooms').doc().collection('callerCandidates');
+    const calleeCandidatesCollection = db.collection('rooms').doc().collection('calleeCandidates');
+
+    peerConnection.addEventListener('icecandidate', event => {
+        if (!event.candidate) {
+            console.log('Got final candidate!');
+            return;
+        }
+        console.log('Got candidate: ', event.candidate);
+        callerCandidatesCollection.add(event.candidate.toJSON());
+    });
+
+    // Create offer
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    console.log('Created offer:', offer);
+
+    const roomWithOffer = {
+        'offer': {
+            type: offer.type,
+            sdp: offer.sdp
+        }
+    };
+
+    const roomRef = await db.collection('rooms').add(roomWithOffer);
+    roomId = roomRef.id;
+    console.log(`New room created with SDP offer. Room ID: ${roomRef.id}`);
+    document.querySelector('#currentRoom').innerText = `Current room is ${roomRef.id} - You are the caller!`;
+
+    // Listening for remote session description
+    roomRef.onSnapshot(async snapshot => {
+        const data = snapshot.data();
+        if (!peerConnection.currentRemoteDescription && data && data.answer) {
+            console.log('Got remote description: ', data.answer);
+            const rtcSessionDescription = new RTCSessionDescription(data.answer);
+            await peerConnection.setRemoteDescription(rtcSessionDescription);
+        }
+    });
+
+    // Listen for remote ICE candidates
+    roomRef.collection('calleeCandidates').onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(async change => {
+            if (change.type === 'added') {
+                let data = change.doc.data();
+                console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+            }
+        });
+    });
+}
+
+// Join an existing room
+async function joinRoom() {
+    document.querySelector('#createBtn').disabled = true;
+    document.querySelector('#joinBtn').disabled = true;
+
+    document.querySelector('#confirmJoinBtn').addEventListener('click', async () => {
+        roomId = document.querySelector('#roomId').value;
+        console.log('Join room: ', roomId);
+        document.querySelector('#currentRoom').innerText = `Current room is ${roomId} - You are the callee!`;
+        await joinRoomById(roomId);
+    });
+}
+
+async function joinRoomById(roomId) {
+    const roomRef = db.collection('rooms').doc(`${roomId}`);
+    const roomSnapshot = await roomRef.get();
+    console.log('Got room:', roomSnapshot.exists);
+
+    if (roomSnapshot.exists) {
+        console.log('Create PeerConnection with configuration: ', configuration);
+        peerConnection = new RTCPeerConnection(configuration);
+        registerPeerConnectionListeners();
+        
+        // Add local stream tracks
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+        });
+
+        // Code for collecting ICE candidates below
+        const calleeCandidatesCollection = roomRef.collection('calleeCandidates');
+        peerConnection.addEventListener('icecandidate', event => {
+            if (!event.candidate) {
+                console.log('Got final candidate!');
+                return;
+            }
+            console.log('Got candidate: ', event.candidate);
+            calleeCandidatesCollection.add(event.candidate.toJSON());
+        });
+
+        peerConnection.addEventListener('track', event => {
+            console.log('Got remote track:', event.streams[0]);
+            event.streams[0].getTracks().forEach(track => {
+                console.log('Add a track to the remoteStream:', track);
+                remoteStream.addTrack(track);
+            });
+        });
+
+        // Create SDP answer
+        const offer = roomSnapshot.data().offer;
+        console.log('Got offer:', offer);
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await peerConnection.createAnswer();
+        console.log('Created answer:', answer);
+        await peerConnection.setLocalDescription(answer);
+
+        const roomWithAnswer = {
+            answer: {
+                type: answer.type,
+                sdp: answer.sdp
+            }
+        };
+        await roomRef.update(roomWithAnswer);
+
+        // Listening for remote ICE candidates below
+        roomRef.collection('callerCandidates').onSnapshot(snapshot => {
+            snapshot.docChanges().forEach(async change => {
+                if (change.type === 'added') {
+                    let data = change.doc.data();
+                    console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+                }
+            });
+        });
+    }
+
+    document.querySelector('#roomDialog').style.display = 'none';
+}
+
+// Hang up call
+async function hangUp() {
+    const tracks = document.querySelector('#localVideo').srcObject.getTracks();
+    tracks.forEach(track => {
+        track.stop();
+    });
+
+    if (remoteStream) {
+        remoteStream.getTracks().forEach(track => track.stop());
+    }
+
+    if (peerConnection) {
+        peerConnection.close();
+    }
+
+    document.querySelector('#localVideo').srcObject = null;
+    document.querySelector('#remoteVideo').srcObject = null;
+    document.querySelector('#startButton').disabled = false;
+    document.querySelector('#createBtn').disabled = true;
+    document.querySelector('#joinBtn').disabled = true;
+    document.querySelector('#hangupBtn').disabled = true;
+    document.querySelector('#currentRoom').innerText = '';
+
+    // Delete room on hangup
+    if (roomId) {
+        const roomRef = db.collection('rooms').doc(roomId);
+        const calleeCandidates = await roomRef.collection('calleeCandidates').get();
+        calleeCandidates.forEach(async candidate => {
+            await candidate.ref.delete();
+        });
+        const callerCandidates = await roomRef.collection('callerCandidates').get();
+        callerCandidates.forEach(async candidate => {
+            await candidate.ref.delete();
+        });
+        await roomRef.delete();
+    }
+
+    document.location.reload(true);
+}
+
+// Register peer connection listeners
+function registerPeerConnectionListeners() {
+    peerConnection.addEventListener('icegatheringstatechange', () => {
+        console.log(`ICE gathering state changed: ${peerConnection.iceGatheringState}`);
+    });
+
+    peerConnection.addEventListener('connectionstatechange', () => {
+        console.log(`Connection state change: ${peerConnection.connectionState}`);
+    });
+
+    peerConnection.addEventListener('signalingstatechange', () => {
+        console.log(`Signaling state change: ${peerConnection.signalingState}`);
+    });
+
+    peerConnection.addEventListener('iceconnectionstatechange ', () => {
+        console.log(`ICE connection state change: ${peerConnection.iceConnectionState}`);
+    });
+
+    peerConnection.addEventListener('track', event => {
+        console.log('Got remote track:', event.streams[0]);
+        event.streams[0].getTracks().forEach(track => {
+            console.log('Add a track to the remoteStream:', track);
+            remoteStream.addTrack(track);
+        });
+    });
+}
+
+// Initialize when page loads
+init();
+```
+
+### 4. firebase.json
+```json
+{
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
+```
+
+## Step 4: Firebase Configuration
+
+### Get Firebase Config
+1. In Firebase Console, go to Project Settings (gear icon)
+2. Scroll down to "Your apps" section
+3. Click "Add app" and select Web (</>)
+4. Register your app with a nickname
+5. Copy the config object and replace it in `main.js`
+
+Example config:
+```javascript
+const firebaseConfig = {
+    apiKey: "AIzaSyDOCAbC123dEf456GhI789jKl01MnO2PqR",
+    authDomain: "your-project-12345.firebaseapp.com",
+    projectId: "your-project-12345",
+    storageBucket: "your-project-12345.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdefghijklmnop"
+};
+```
+
+## Step 5: Running the Application
+
+### Local Development
+```bash
+# Start Firebase hosting emulator
+firebase serve --only hosting
+
+# Your app will be available at:
+# http://localhost:5000
+```
+
+### Testing the Video Chat
+1. Open `http://localhost:5000` in two different browser windows/tabs
+2. In both windows, click "Start" to access camera/microphone
+3. In the first window, click "Create Room" - note the Room ID
+4. In the second window, click "Join Room" and enter the Room ID
+5. You should now see video chat working between both windows!
+
+### Deployment
+```bash
+# Deploy to Firebase Hosting
+firebase deploy --only hosting
+
+# Your app will be live at:
+# https://your-project-id.web.app
+```
+
+## Step 6: Security Rules (Production)
+
+### Firestore Security Rules
+Create `firestore.rules`:
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /rooms/{roomId} {
+      allow read, write: if request.time < timestamp.date(2024, 12, 31);
+      
+      match /callerCandidates/{candidateId} {
+        allow read, write: if request.time < timestamp.date(2024, 12, 31);
+      }
+      
+      match /calleeCandidates/{candidateId} {
+        allow read, write: if request.time < timestamp.date(2024, 12, 31);
+      }
+    }
+  }
+}
+```
+
+Deploy security rules:
+```bash
+firebase deploy --only firestore:rules
+```
+
+## Advanced Features & Enhancements
+
+### 1. Add Screen Sharing
+```javascript
+async function shareScreen() {
+    try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: true
+        });
+        
+        const videoTrack = screenStream.getVideoTracks()[0];
+        const sender = peerConnection.getSenders().find(s => 
+            s.track && s.track.kind === 'video'
+        );
+        
+        if (sender) {
+            await sender.replaceTrack(videoTrack);
+        }
+        
+        videoTrack.onended = () => {
+            // Switch back to camera when screen sharing ends
+            const cameraStream = localStream.getVideoTracks()[0];
+            sender.replaceTrack(cameraStream);
+        };
+    } catch (error) {
+        console.error('Error sharing screen:', error);
+    }
+}
+```
+
+### 2. Add Chat Messaging
+```javascript
+// Add to HTML
+<div id="chatContainer">
+    <div id="messages"></div>
+    <input id="messageInput" type="text" placeholder="Type a message...">
+    <button id="sendBtn">Send</button>
+</div>
+
+// Add to JavaScript
+const dataChannel = peerConnection.createDataChannel('chat');
+dataChannel.onopen = () => console.log('Data channel opened');
+dataChannel.onmessage = (event) => {
+    displayMessage(event.data, 'remote');
+};
+
+function sendMessage() {
+    const input = document.querySelector('#messageInput');
+    const message = input.value;
+    if (message) {
+        dataChannel.send(message);
+        displayMessage(message, 'local');
+        input.value = '';
+    }
+}
+
+function displayMessage(message, sender) {
+    const messagesDiv = document.querySelector('#messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.textContent = `${sender}: ${message}`;
+    messagesDiv.appendChild(messageDiv);
+}
+```
+
+### 3. Add Audio/Video Controls
+```javascript
+function toggleMute() {
+    const audioTrack = localStream.getAudioTracks()[0];
+    if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        document.querySelector('#muteBtn').textContent = 
+            audioTrack.enabled ? 'Mute' : 'Unmute';
+    }
+}
+
+function toggleVideo() {
+    const videoTrack = localStream.getVideoTracks()[0];
+    if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        document.querySelector('#videoBtn').textContent = 
+            videoTrack.enabled ? 'Stop Video' : 'Start Video';
+    }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Camera/Microphone Access Denied**
+   - Ensure HTTPS or localhost
+   - Check browser permissions
+   - Try different browsers
+
+2. **Connection Failed**
+   - Check Firebase configuration
+   - Verify Firestore rules
+   - Check browser console for errors
+
+3. **No Remote Video**
+   - Check STUN/TURN server configuration
+   - Verify both users granted permissions
+   - Check network connectivity
+
+### Browser Compatibility
+- Chrome: Full support
+- Firefox: Full support  
+- Safari: Supported (iOS 11+)
+- Edge: Full support
+
+### Performance Tips
+- Use TURN servers for production (behind firewalls)
+- Implement connection quality monitoring
+- Add adaptive bitrate for poor connections
+- Consider using WebRTC libraries like SimpleWebRTC for production
+
+## Production Considerations
+
+1. **TURN Servers**: For users behind firewalls
+2. **Authentication**: Add user authentication
+3. **Room Management**: Implement room expiration
+4. **Error Handling**: Add comprehensive error handling
+5. **Mobile Optimization**: Test and optimize for mobile devices
+6. **Scaling**: Consider using WebRTC SFU for group calls
+
+This guide provides a complete, production-ready foundation for your WebRTC video chat application. The implementation follows WebRTC best practices and includes all necessary code for a seamless video calling experience.

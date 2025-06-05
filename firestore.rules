@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Rules for rooms collection
+    match /rooms/{roomId} {
+      // Allow read and write for rooms with time-based expiration
+      allow read, write: if request.time < timestamp.date(2025, 12, 31);
+      
+      // Rules for caller candidates subcollection
+      match /callerCandidates/{candidateId} {
+        allow read, write: if request.time < timestamp.date(2025, 12, 31);
+      }
+      
+      // Rules for callee candidates subcollection
+      match /calleeCandidates/{candidateId} {
+        allow read, write: if request.time < timestamp.date(2025, 12, 31);
+      }
+    }
+  }
+}

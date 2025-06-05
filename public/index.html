@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FirebaseRTC - Video Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>WebRTC Video Chat</h1>
+        
+        <div id="videos">
+            <div class="video-container">
+                <video id="localVideo" muted autoplay playsinline></video>
+                <label>You</label>
+            </div>
+            <div class="video-container">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <label>Remote</label>
+            </div>
+        </div>
+
+        <div id="buttons">
+            <button id="startButton" class="btn btn-primary">Start Camera</button>
+            <button id="createBtn" class="btn btn-success" disabled>Create Room</button>
+            <button id="joinBtn" class="btn btn-info" disabled>Join Room</button>
+            <button id="hangupBtn" class="btn btn-danger" disabled>Hang Up</button>
+        </div>
+
+        <div id="roomInfo">
+            <span id="currentRoom"></span>
+        </div>
+
+        <!-- Permission Help -->
+        <div id="permissionHelp" class="permission-help" style="display: none;">
+            <div class="help-content">
+                <h3>🔐 Camera & Microphone Access Required</h3>
+                <p>This video chat app needs access to your camera and microphone to work properly.</p>
+
+                <div class="permission-steps">
+                    <h4>How to allow access:</h4>
+                    <ol>
+                        <li>Look for a camera/microphone icon in your browser's address bar</li>
+                        <li>Click on it and select "Allow" for both camera and microphone</li>
+                        <li>If you don't see the icon, check your browser settings</li>
+                        <li>Refresh this page after granting permissions</li>
+                    </ol>
+                </div>
+
+                <div class="browser-help">
+                    <h4>Browser-specific help:</h4>
+                    <ul>
+                        <li><strong>Chrome:</strong> Settings → Privacy and Security → Site Settings → Camera/Microphone</li>
+                        <li><strong>Firefox:</strong> Settings → Privacy & Security → Permissions</li>
+                        <li><strong>Safari:</strong> Safari → Preferences → Websites → Camera/Microphone</li>
+                    </ul>
+                </div>
+
+                <button onclick="document.getElementById('permissionHelp').style.display='none'" class="btn btn-primary">I understand</button>
+                <button onclick="location.reload()" class="btn btn-secondary">Refresh Page</button>
+                <a href="diagnostic.html" class="btn btn-info" target="_blank">Run Diagnostic Test</a>
+            </div>
+        </div>
+
+        <!-- Room Join Dialog -->
+        <div id="roomDialog" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Join Room</h3>
+                <label for="roomId">Room ID:</label>
+                <input id="roomId" type="text" placeholder="Enter room ID">
+                <div class="modal-buttons">
+                    <button id="confirmJoinBtn" class="btn btn-primary">Join</button>
+                    <button id="cancelJoinBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div id="controls" style="display: none;">
+            <button id="muteBtn" class="btn btn-warning">Mute</button>
+            <button id="videoBtn" class="btn btn-warning">Stop Video</button>
+            <button id="shareScreenBtn" class="btn btn-info">Share Screen</button>
+        </div>
+
+        <!-- Chat Section -->
+        <div id="chatContainer" style="display: none;">
+            <div id="chatHeader">
+                <h3>Chat</h3>
+                <button id="toggleChatBtn" class="btn btn-sm">Hide Chat</button>
+            </div>
+            <div id="messages"></div>
+            <div id="chatInput">
+                <input id="messageInput" type="text" placeholder="Type a message...">
+                <button id="sendBtn" class="btn btn-primary">Send</button>
+            </div>
+        </div>
+
+        <!-- Help Links -->
+        <div id="helpLinks" style="text-align: center; margin-top: 20px;">
+            <a href="fix-permissions.html" target="_blank" class="btn btn-danger btn-sm">🚨 Fix Permissions</a>
+            <a href="diagnostic.html" target="_blank" class="btn btn-info btn-sm">🔧 Camera/Mic Diagnostic</a>
+            <a href="test.html" target="_blank" class="btn btn-info btn-sm">🧪 Browser Test</a>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script src="main.js"></script>
+</body>
+</html>

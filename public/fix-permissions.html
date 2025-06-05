@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Camera & Microphone Permissions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        .method {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .method h2 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .steps {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .steps ol {
+            padding-left: 20px;
+        }
+        .steps li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .screenshot {
+            max-width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .video-demo {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 Fix Camera & Microphone Permissions</h1>
+        
+        <div class="warning">
+            <strong>Problem:</strong> Your browser has blocked camera and microphone access for this website. 
+            This prevents the video chat from working properly.
+        </div>
+
+        <div class="method">
+            <h2>Method 1: Quick Fix (Recommended)</h2>
+            <div class="steps">
+                <ol>
+                    <li>Look for a <span class="highlight">🔒 lock icon</span> or <span class="highlight">🎥 camera icon</span> in your browser's address bar (left side)</li>
+                    <li>Click on the icon</li>
+                    <li>Change both <strong>Camera</strong> and <strong>Microphone</strong> from "Block" to <span class="highlight">"Allow"</span></li>
+                    <li>Click <span class="highlight">"Reload"</span> or refresh the page</li>
+                    <li>Try clicking "Start Camera" again</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="method">
+            <h2>Method 2: Chrome Settings</h2>
+            <div class="steps">
+                <ol>
+                    <li>Copy and paste this into your address bar: <code>chrome://settings/content/camera</code></li>
+                    <li>Press Enter</li>
+                    <li>Look for this website (localhost:8000 or your domain) in the <strong>"Block"</strong> section</li>
+                    <li>Click the <strong>trash/delete icon</strong> next to it to remove it</li>
+                    <li>Repeat for microphone: <code>chrome://settings/content/microphone</code></li>
+                    <li>Go back to the video chat and try again</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="method">
+            <h2>Method 3: Clear Site Data</h2>
+            <div class="steps">
+                <ol>
+                    <li>Right-click anywhere on the video chat page</li>
+                    <li>Select <span class="highlight">"Inspect"</span> or <span class="highlight">"Inspect Element"</span></li>
+                    <li>Click the <span class="highlight">"Application"</span> tab at the top</li>
+                    <li>In the left sidebar, click <span class="highlight">"Storage"</span></li>
+                    <li>Click the <span class="highlight">"Clear site data"</span> button</li>
+                    <li>Close the developer tools and refresh the page</li>
+                    <li>When prompted for camera/microphone access, click <span class="highlight">"Allow"</span></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="method">
+            <h2>Method 4: Edge Browser</h2>
+            <div class="steps">
+                <ol>
+                    <li>Click the <span class="highlight">🔒 lock icon</span> in the address bar</li>
+                    <li>Click <span class="highlight">"Permissions for this site"</span></li>
+                    <li>Change Camera and Microphone to <span class="highlight">"Allow"</span></li>
+                    <li>Refresh the page</li>
+                    <li>Alternatively, go to: <code>edge://settings/content/camera</code></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="success">
+            <strong>✅ Success Check:</strong> After following any method above, you should see a permission prompt 
+            when you click "Start Camera". Make sure to click <strong>"Allow"</strong> when prompted!
+        </div>
+
+        <div class="method">
+            <h2>Still Having Issues?</h2>
+            <div class="steps">
+                <ul>
+                    <li><strong>Try a different browser:</strong> Chrome, Firefox, or Edge</li>
+                    <li><strong>Check if your camera/microphone works in other apps</strong> (like Zoom, Teams)</li>
+                    <li><strong>Restart your browser completely</strong></li>
+                    <li><strong>Make sure no other app is using your camera/microphone</strong></li>
+                    <li><strong>Try incognito/private browsing mode</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="video-demo">
+            <h3>Test Your Setup</h3>
+            <p>After fixing permissions, test your camera and microphone:</p>
+            <a href="diagnostic.html" class="btn" target="_blank">🔧 Run Diagnostic Test</a>
+            <a href="index.html" class="btn btn-success">🎥 Back to Video Chat</a>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <p><strong>Need more help?</strong> Try the diagnostic tool or check your browser's help documentation.</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-detect browser and show relevant instructions
+        function detectBrowser() {
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            const isEdge = /Edg/.test(navigator.userAgent);
+            const isFirefox = /Firefox/.test(navigator.userAgent);
+            
+            if (isChrome) {
+                document.title = "Fix Chrome Camera & Microphone Permissions";
+            } else if (isEdge) {
+                document.title = "Fix Edge Camera & Microphone Permissions";
+            } else if (isFirefox) {
+                document.title = "Fix Firefox Camera & Microphone Permissions";
+            }
+        }
+
+        // Check if permissions are already granted
+        async function checkCurrentPermissions() {
+            try {
+                if (navigator.permissions) {
+                    const cameraPermission = await navigator.permissions.query({ name: 'camera' });
+                    const microphonePermission = await navigator.permissions.query({ name: 'microphone' });
+                    
+                    if (cameraPermission.state === 'granted' && microphonePermission.state === 'granted') {
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'success';
+                        successDiv.innerHTML = `
+                            <strong>🎉 Great News!</strong> Your camera and microphone permissions are already granted! 
+                            <a href="index.html" class="btn btn-success" style="margin-left: 10px;">Go to Video Chat</a>
+                        `;
+                        document.querySelector('.container').insertBefore(successDiv, document.querySelector('.method'));
+                    }
+                }
+            } catch (error) {
+                console.log('Could not check permissions:', error);
+            }
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            detectBrowser();
+            checkCurrentPermissions();
+        });
+    </script>
+</body>
+</html>

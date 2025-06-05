@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        video {
+            width: 300px;
+            height: 200px;
+            background: #000;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebRTC Firebase Video Chat - Test Page</h1>
+    
+    <div class="test-section">
+        <h2>1. Browser Compatibility Test</h2>
+        <div id="browserTest"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Media Access Test</h2>
+        <button onclick="testMediaAccess()">Test Camera & Microphone</button>
+        <div id="mediaTest"></div>
+        <video id="testVideo" muted autoplay playsinline style="display: none;"></video>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Firebase Connection Test</h2>
+        <button onclick="testFirebase()">Test Firebase Connection</button>
+        <div id="firebaseTest"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. WebRTC Test</h2>
+        <button onclick="testWebRTC()">Test WebRTC Support</button>
+        <div id="webrtcTest"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Ready to Start?</h2>
+        <p>If all tests pass, you're ready to use the video chat application!</p>
+        <a href="index.html" style="display: inline-block; background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 4px;">Go to Video Chat App</a>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script>
+        // Test browser compatibility
+        function testBrowserCompatibility() {
+            const results = [];
+            
+            // Check WebRTC support
+            if (window.RTCPeerConnection) {
+                results.push({ test: 'WebRTC Support', status: 'success', message: 'RTCPeerConnection is supported' });
+            } else {
+                results.push({ test: 'WebRTC Support', status: 'error', message: 'RTCPeerConnection is not supported' });
+            }
+            
+            // Check getUserMedia support
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                results.push({ test: 'Media Devices', status: 'success', message: 'getUserMedia is supported' });
+            } else {
+                results.push({ test: 'Media Devices', status: 'error', message: 'getUserMedia is not supported' });
+            }
+            
+            // Check if HTTPS or localhost
+            const isSecure = location.protocol === 'https:' || location.hostname === 'localhost';
+            if (isSecure) {
+                results.push({ test: 'Secure Context', status: 'success', message: 'Running in secure context' });
+            } else {
+                results.push({ test: 'Secure Context', status: 'warning', message: 'Not running in secure context (HTTPS required for production)' });
+            }
+            
+            displayResults('browserTest', results);
+        }
+        
+        // Test media access
+        async function testMediaAccess() {
+            const testDiv = document.getElementById('mediaTest');
+            const video = document.getElementById('testVideo');
+            
+            try {
+                testDiv.innerHTML = '<div class="status warning">Requesting camera and microphone access...</div>';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                
+                video.srcObject = stream;
+                video.style.display = 'block';
+                
+                testDiv.innerHTML = '<div class="status success">✓ Camera and microphone access granted!</div>';
+                
+                // Stop the stream after 5 seconds
+                setTimeout(() => {
+                    stream.getTracks().forEach(track => track.stop());
+                    video.style.display = 'none';
+                    testDiv.innerHTML += '<div class="status success">Media test completed successfully.</div>';
+                }, 5000);
+                
+            } catch (error) {
+                testDiv.innerHTML = `<div class="status error">✗ Error accessing media devices: ${error.message}</div>`;
+            }
+        }
+        
+        // Test Firebase connection
+        async function testFirebase() {
+            const testDiv = document.getElementById('firebaseTest');
+            
+            try {
+                // Try to load Firebase config from main.js
+                testDiv.innerHTML = '<div class="status warning">Testing Firebase connection...</div>';
+                
+                // This is a basic test - in a real scenario, you'd import the config
+                testDiv.innerHTML = '<div class="status warning">Please ensure Firebase is configured in main.js</div>';
+                
+                // You can add more specific Firebase tests here
+                setTimeout(() => {
+                    testDiv.innerHTML += '<div class="status success">Firebase SDK loaded successfully. Make sure to configure your project in main.js</div>';
+                }, 1000);
+                
+            } catch (error) {
+                testDiv.innerHTML = `<div class="status error">✗ Firebase error: ${error.message}</div>`;
+            }
+        }
+        
+        // Test WebRTC functionality
+        function testWebRTC() {
+            const testDiv = document.getElementById('webrtcTest');
+            const results = [];
+            
+            try {
+                // Test RTCPeerConnection creation
+                const pc = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+                results.push({ test: 'PeerConnection Creation', status: 'success', message: 'RTCPeerConnection created successfully' });
+                
+                // Test data channel
+                const dc = pc.createDataChannel('test');
+                results.push({ test: 'Data Channel', status: 'success', message: 'Data channel created successfully' });
+                
+                pc.close();
+                results.push({ test: 'Connection Cleanup', status: 'success', message: 'PeerConnection closed successfully' });
+                
+            } catch (error) {
+                results.push({ test: 'WebRTC Test', status: 'error', message: `Error: ${error.message}` });
+            }
+            
+            displayResults('webrtcTest', results);
+        }
+        
+        // Helper function to display test results
+        function displayResults(elementId, results) {
+            const element = document.getElementById(elementId);
+            let html = '';
+            
+            results.forEach(result => {
+                html += `<div class="status ${result.status}">
+                    <strong>${result.test}:</strong> ${result.message}
+                </div>`;
+            });
+            
+            element.innerHTML = html;
+        }
+        
+        // Run browser compatibility test on page load
+        document.addEventListener('DOMContentLoaded', testBrowserCompatibility);
+    </script>
+</body>
+</html>

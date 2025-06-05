@@ -1,0 +1,41 @@
+{
+  "name": "webrtc-firebase-video-chat",
+  "version": "1.0.0",
+  "description": "A WebRTC video chat application using Firebase for signaling",
+  "main": "public/main.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "serve": "node server.js",
+    "firebase:serve": "firebase serve --only hosting",
+    "build": "echo 'No build step required for this project'",
+    "deploy": "firebase deploy",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:firestore": "firebase deploy --only firestore",
+    "test": "echo 'No tests specified'",
+    "lint": "echo 'No linting configured'"
+  },
+  "keywords": [
+    "webrtc",
+    "firebase",
+    "video-chat",
+    "peer-to-peer",
+    "real-time"
+  ],
+  "author": "Viraj Mandlik",
+  "license": "MIT",
+  "devDependencies": {
+    "firebase-tools": "^12.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/webrtc-firebase-video-chat.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/webrtc-firebase-video-chat/issues"
+  },
+  "homepage": "https://github.com/yourusername/webrtc-firebase-video-chat#readme"
+}

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera & Microphone Diagnostic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: #000;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .device-list {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .device-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .device-item:last-child {
+            border-bottom: none;
+        }
+        .back-link {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .back-link:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Camera & Microphone Diagnostic</h1>
+        
+        <div class="test-section">
+            <h2>1. Browser Compatibility</h2>
+            <div id="browserTest"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Available Devices</h2>
+            <button onclick="listDevices()">List Available Devices</button>
+            <div id="deviceList"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Permission Status</h2>
+            <button onclick="checkPermissions()">Check Permissions</button>
+            <div id="permissionStatus"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. Camera Test</h2>
+            <button onclick="testCamera()">Test Camera</button>
+            <button onclick="stopCamera()" disabled id="stopCameraBtn">Stop Camera</button>
+            <div id="cameraTest"></div>
+            <video id="testVideo" muted autoplay playsinline style="display: none;"></video>
+        </div>
+        
+        <div class="test-section">
+            <h2>5. Microphone Test</h2>
+            <button onclick="testMicrophone()">Test Microphone</button>
+            <button onclick="stopMicrophone()" disabled id="stopMicBtn">Stop Microphone</button>
+            <div id="microphoneTest"></div>
+            <canvas id="audioCanvas" width="400" height="100" style="border: 1px solid #ddd; display: none;"></canvas>
+        </div>
+        
+        <div class="test-section">
+            <h2>6. Full Media Test</h2>
+            <button onclick="testFullMedia()">Test Camera + Microphone</button>
+            <button onclick="stopFullMedia()" disabled id="stopFullBtn">Stop Test</button>
+            <div id="fullMediaTest"></div>
+        </div>
+        
+        <a href="index.html" class="back-link">← Back to Video Chat</a>
+    </div>
+
+    <script>
+        let currentStream = null;
+        let audioContext = null;
+        let analyser = null;
+        let animationId = null;
+
+        // Test browser compatibility
+        function testBrowserCompatibility() {
+            const results = [];
+            
+            // Check WebRTC support
+            if (window.RTCPeerConnection) {
+                results.push({ test: 'WebRTC Support', status: 'success', message: '✓ RTCPeerConnection is supported' });
+            } else {
+                results.push({ test: 'WebRTC Support', status: 'error', message: '✗ RTCPeerConnection is not supported' });
+            }
+            
+            // Check getUserMedia support
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                results.push({ test: 'Media Devices', status: 'success', message: '✓ getUserMedia is supported' });
+            } else {
+                results.push({ test: 'Media Devices', status: 'error', message: '✗ getUserMedia is not supported' });
+            }
+            
+            // Check secure context
+            const isSecure = window.isSecureContext || location.hostname === 'localhost';
+            if (isSecure) {
+                results.push({ test: 'Secure Context', status: 'success', message: '✓ Running in secure context' });
+            } else {
+                results.push({ test: 'Secure Context', status: 'warning', message: '⚠ Not running in secure context (HTTPS required)' });
+            }
+            
+            // Check data channel support
+            try {
+                const pc = new RTCPeerConnection();
+                pc.createDataChannel('test');
+                pc.close();
+                results.push({ test: 'Data Channels', status: 'success', message: '✓ Data channels supported' });
+            } catch (error) {
+                results.push({ test: 'Data Channels', status: 'error', message: '✗ Data channels not supported' });
+            }
+            
+            displayResults('browserTest', results);
+        }
+
+        // List available devices
+        async function listDevices() {
+            const deviceList = document.getElementById('deviceList');
+            
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+                    deviceList.innerHTML = '<div class="status error">Device enumeration not supported</div>';
+                    return;
+                }
+                
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                const audioDevices = devices.filter(device => device.kind === 'audioinput');
+                
+                let html = '<div class="device-list">';
+                
+                html += '<h4>Video Devices:</h4>';
+                if (videoDevices.length > 0) {
+                    videoDevices.forEach((device, index) => {
+                        html += `<div class="device-item">📹 ${device.label || `Camera ${index + 1}`}</div>`;
+                    });
+                } else {
+                    html += '<div class="device-item">No video devices found</div>';
+                }
+                
+                html += '<h4>Audio Devices:</h4>';
+                if (audioDevices.length > 0) {
+                    audioDevices.forEach((device, index) => {
+                        html += `<div class="device-item">🎤 ${device.label || `Microphone ${index + 1}`}</div>`;
+                    });
+                } else {
+                    html += '<div class="device-item">No audio devices found</div>';
+                }
+                
+                html += '</div>';
+                deviceList.innerHTML = html;
+                
+            } catch (error) {
+                deviceList.innerHTML = `<div class="status error">Error listing devices: ${error.message}</div>`;
+            }
+        }
+
+        // Check permissions
+        async function checkPermissions() {
+            const permissionStatus = document.getElementById('permissionStatus');
+            
+            try {
+                if (!navigator.permissions) {
+                    permissionStatus.innerHTML = '<div class="status warning">Permissions API not supported</div>';
+                    return;
+                }
+                
+                const cameraPermission = await navigator.permissions.query({ name: 'camera' });
+                const microphonePermission = await navigator.permissions.query({ name: 'microphone' });
+                
+                let html = '<div class="device-list">';
+                html += `<div class="device-item">📹 Camera: <strong>${cameraPermission.state}</strong></div>`;
+                html += `<div class="device-item">🎤 Microphone: <strong>${microphonePermission.state}</strong></div>`;
+                html += '</div>';
+                
+                if (cameraPermission.state === 'denied' || microphonePermission.state === 'denied') {
+                    html += '<div class="status error">Some permissions are denied. Please check your browser settings.</div>';
+                } else if (cameraPermission.state === 'granted' && microphonePermission.state === 'granted') {
+                    html += '<div class="status success">All permissions granted!</div>';
+                } else {
+                    html += '<div class="status warning">Permissions not yet determined. Try accessing camera/microphone.</div>';
+                }
+                
+                permissionStatus.innerHTML = html;
+                
+            } catch (error) {
+                permissionStatus.innerHTML = `<div class="status error">Error checking permissions: ${error.message}</div>`;
+            }
+        }
+
+        // Test camera
+        async function testCamera() {
+            const cameraTest = document.getElementById('cameraTest');
+            const video = document.getElementById('testVideo');
+            const stopBtn = document.getElementById('stopCameraBtn');
+            
+            try {
+                cameraTest.innerHTML = '<div class="status info">Requesting camera access...</div>';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                
+                video.srcObject = stream;
+                video.style.display = 'block';
+                currentStream = stream;
+                stopBtn.disabled = false;
+                
+                cameraTest.innerHTML = '<div class="status success">✓ Camera access successful!</div>';
+                
+            } catch (error) {
+                cameraTest.innerHTML = `<div class="status error">✗ Camera test failed: ${error.message}</div>`;
+                video.style.display = 'none';
+            }
+        }
+
+        // Stop camera
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            
+            const video = document.getElementById('testVideo');
+            video.srcObject = null;
+            video.style.display = 'none';
+            
+            document.getElementById('stopCameraBtn').disabled = true;
+            document.getElementById('cameraTest').innerHTML = '<div class="status info">Camera stopped</div>';
+        }
+
+        // Test microphone with visualization
+        async function testMicrophone() {
+            const microphoneTest = document.getElementById('microphoneTest');
+            const canvas = document.getElementById('audioCanvas');
+            const stopBtn = document.getElementById('stopMicBtn');
+            
+            try {
+                microphoneTest.innerHTML = '<div class="status info">Requesting microphone access...</div>';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                
+                // Set up audio visualization
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                canvas.style.display = 'block';
+                const canvasCtx = canvas.getContext('2d');
+                
+                function draw() {
+                    animationId = requestAnimationFrame(draw);
+                    
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    canvasCtx.fillStyle = 'rgb(240, 240, 240)';
+                    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    const barWidth = (canvas.width / bufferLength) * 2.5;
+                    let barHeight;
+                    let x = 0;
+                    
+                    for (let i = 0; i < bufferLength; i++) {
+                        barHeight = dataArray[i] / 2;
+                        
+                        canvasCtx.fillStyle = `rgb(50, ${barHeight + 100}, 50)`;
+                        canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                        
+                        x += barWidth + 1;
+                    }
+                }
+                
+                draw();
+                currentStream = stream;
+                stopBtn.disabled = false;
+                
+                microphoneTest.innerHTML = '<div class="status success">✓ Microphone access successful! Speak to see the visualization.</div>';
+                
+            } catch (error) {
+                microphoneTest.innerHTML = `<div class="status error">✗ Microphone test failed: ${error.message}</div>`;
+                canvas.style.display = 'none';
+            }
+        }
+
+        // Stop microphone
+        function stopMicrophone() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            const canvas = document.getElementById('audioCanvas');
+            canvas.style.display = 'none';
+            
+            document.getElementById('stopMicBtn').disabled = true;
+            document.getElementById('microphoneTest').innerHTML = '<div class="status info">Microphone stopped</div>';
+        }
+
+        // Test full media
+        async function testFullMedia() {
+            const fullMediaTest = document.getElementById('fullMediaTest');
+            const stopBtn = document.getElementById('stopFullBtn');
+            
+            try {
+                fullMediaTest.innerHTML = '<div class="status info">Requesting camera and microphone access...</div>';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480 }, 
+                    audio: true 
+                });
+                
+                currentStream = stream;
+                stopBtn.disabled = false;
+                
+                const videoTracks = stream.getVideoTracks();
+                const audioTracks = stream.getAudioTracks();
+                
+                let html = '<div class="status success">✓ Full media access successful!</div>';
+                html += '<div class="device-list">';
+                html += `<div class="device-item">📹 Video tracks: ${videoTracks.length}</div>`;
+                html += `<div class="device-item">🎤 Audio tracks: ${audioTracks.length}</div>`;
+                
+                if (videoTracks.length > 0) {
+                    const settings = videoTracks[0].getSettings();
+                    html += `<div class="device-item">📐 Resolution: ${settings.width}x${settings.height}</div>`;
+                }
+                
+                html += '</div>';
+                fullMediaTest.innerHTML = html;
+                
+            } catch (error) {
+                fullMediaTest.innerHTML = `<div class="status error">✗ Full media test failed: ${error.message}</div>`;
+            }
+        }
+
+        // Stop full media
+        function stopFullMedia() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            
+            document.getElementById('stopFullBtn').disabled = true;
+            document.getElementById('fullMediaTest').innerHTML = '<div class="status info">Media access stopped</div>';
+        }
+
+        // Helper function to display test results
+        function displayResults(elementId, results) {
+            const element = document.getElementById(elementId);
+            let html = '';
+            
+            results.forEach(result => {
+                html += `<div class="status ${result.status}">
+                    <strong>${result.test}:</strong> ${result.message}
+                </div>`;
+            });
+            
+            element.innerHTML = html;
+        }
+
+        // Run browser compatibility test on page load
+        document.addEventListener('DOMContentLoaded', testBrowserCompatibility);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+            if (audioContext) {
+                audioContext.close();
+            }
+        });
+    </script>
+</body>
+</html>
